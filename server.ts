@@ -45,7 +45,6 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-  // Buscamos GEMINI_API_KEY en lugar de VITE_ para el backend
   const apiKey = process.env.GEMINI_API_KEY;
   const ai = apiKey
     ? new GoogleGenAI({
@@ -68,15 +67,13 @@ REGLAS DE FORMATO:
 
   app.post('/api/chat', async (req, res) => {
     try {
-      const { messages, userContext } = req.body;
-      const promptParts: any[] = [{ text: `${SYSTEM_INSTRUCTION}\nResponde como Asesor:` }];
-
-      const lastUserMsg = messages[messages.length - 1];
+      const { messages } = req.body;
+      const lastUserMsg = messages[messages.length - 1]?.content || '';
       
       if (ai) {
         const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash', // Modelo corregido
-          contents: [{ role: 'user', parts: promptParts }],
+          model: 'gemini-1.5-flash',
+          contents: `${SYSTEM_INSTRUCTION}\n\nConsulta del productor: ${lastUserMsg}`,
         });
 
         let responseText = response.text || 'Ocurrió un inconveniente al generar la respuesta.';
@@ -85,10 +82,10 @@ REGLAS DE FORMATO:
         return res.json({ text: responseText, timestamp: new Date().toLocaleTimeString('es-EC') });
       }
 
-      res.json({ text: 'Servicio temporalmente no disponible.', timestamp: new Date().toLocaleTimeString('es-EC') });
+      res.json({ text: 'Servicio de IA temporalmente no disponible.', timestamp: new Date().toLocaleTimeString('es-EC') });
     } catch (err: any) {
       console.error('Error in /api/chat:', err);
-      res.json({ text: 'Error temporal al procesar su solicitud.', timestamp: new Date().toLocaleTimeString('es-EC') });
+      res.json({ text: 'Error temporal al procesar su solicitud. Intente nuevamente.', timestamp: new Date().toLocaleTimeString('es-EC') });
     }
   });
 
@@ -97,8 +94,8 @@ REGLAS DE FORMATO:
       const { diagnosticData } = req.body;
       if (ai) {
         const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash', // Modelo corregido
-          contents: `Genera un plan técnico para ${diagnosticData.especieOCultivo}. Responde en JSON.`,
+          model: 'gemini-1.5-flash',
+          contents: `Genera un plan técnico para ${diagnosticData.especieOCultivo}. Responde solo en JSON.`,
           config: { responseMimeType: 'application/json' },
         });
         return res.json(JSON.parse(response.text || '{}'));
