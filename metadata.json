@@ -1,0 +1,6 @@
+{
+  "name": "Solución Agropecuaria Integral",
+  "description": "Asesoría técnica agrícola y veterinaria experta para el sector agropecuario de Ecuador con recomendaciones de productos, dosificación y gestión de pedidos a finca.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
